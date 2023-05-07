@@ -1,4 +1,5 @@
 from typing import List
+from datetime import datetime
 import gradio as gr
 import threading
 
@@ -7,10 +8,12 @@ import civitai.lib as civitai
 from modules import script_callbacks, shared
 
 previewable_types = ['LORA', 'LyCORIS', 'Hypernetwork', 'TextualInversion', 'Checkpoint']
+previews_update_info = ["Press Refresh button on the right to manually load previews"]
 def load_previews():
     download_missing_previews = shared.opts.data.get('civitai_download_previews', True)
     download_missing_triggers = shared.opts.data.get('civitai_download_triggers', True)
     if not download_missing_previews and not download_missing_triggers: return
+    previews_update_info[0] = datetime.now().strftime("%Y/%m/%d/ %H:%M:%S")
     nsfw_previews = shared.opts.data.get('civitai_nsfw_previews', True)
 
     civitai.log(f"Check resources for missing preview images or trigger words")
@@ -31,10 +34,12 @@ def load_previews():
             results.extend(civitai.get_all_by_hash(batch))
     except:
         civitai.log("Failed to fetch preview images and/or trigger words from Civitai")
+        previews_update_info[0] += " - Failed to fetch preview images and/or trigger words from Civitai"
         return
 
     if len(results) == 0:
         civitai.log("No preview images and/or trigger words found on Civitai")
+        previews_update_info[0] += " - No preview images and/or trigger words found on Civitai"
         return
 
     civitai.log(f"Found {len(results)} hash matches")
@@ -68,7 +73,8 @@ def load_previews():
             updated += 1
 
     civitai.log(f"Updated {updated} preview images and/or trigger words")
-
+    previews_update_info[0] += f" - Found and updated {updated} of {len(hashes)} missing preview images and/or trigger words"
+    
 # Automatically pull model with corresponding hash from Civitai
 def start_load_previews(demo: gr.Blocks, app):
     thread = threading.Thread(target=load_previews)

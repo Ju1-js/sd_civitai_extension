@@ -1,5 +1,16 @@
+import sys
+import os
+import gradio as gr
+
+cwd = os.getcwd()
+utils_dir = os.path.join(cwd, 'extensions', 'sd_civitai_extension', 'scripts')
+sys.path.extend([utils_dir])
+
 from civitai.link import on_civitai_link_key_changed
+from previews import load_previews,previews_update_info
+
 from modules import shared, script_callbacks
+
 
 def on_ui_settings():
     section = ('civitai_link', "Civitai")
@@ -13,6 +24,6 @@ def on_ui_settings():
     shared.opts.add_option("civitai_hashify_resources", shared.OptionInfo(True, "Include resource hashes in image metadata (for resource auto-detection on Civitai)", section=section))
     shared.opts.add_option("civitai_folder_lora", shared.OptionInfo("", "LoRA directory (if not default)", section=section))
     shared.opts.add_option("civitai_folder_lyco", shared.OptionInfo("", "LyCo directory (if not default)", section=section))
-
+    shared.opts.add_option("civitai_manually_download_previews", shared.OptionInfo(previews_update_info[0], "Last manually load time", gr.Dropdown, lambda: {"choices": previews_update_info},refresh=load_previews,section=section))
 
 script_callbacks.on_ui_settings(on_ui_settings)
